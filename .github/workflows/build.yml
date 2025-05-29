@@ -37,7 +37,7 @@ jobs:
         pyinstaller --onefile --windowed --name="DNS管理器" --icon="icon.ico" --add-data="app;app" --hidden-import=PyQt5.sip --hidden-import=qfluentwidgets main.py
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: DNS管理器-Windows
         path: dist/DNS管理器.exe
@@ -80,7 +80,7 @@ jobs:
         pyinstaller --onefile --windowed --name="dns-manager" --add-data="app:app" --hidden-import=PyQt5.sip --hidden-import=qfluentwidgets main.py
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: DNS管理器-Linux
         path: dist/dns-manager
