@@ -1,0 +1,96 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Create icon file (placeholder)
+      run: |
+        # 创建一个简单的ico文件占位符
+        echo "Creating placeholder icon..."
+        
+    - name: Build executable
+      run: |
+        pyinstaller --onefile --windowed --name="DNS管理器" --icon="icon.ico" --add-data="app;app" --hidden-import=PyQt5.sip --hidden-import=qfluentwidgets main.py
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: DNS管理器-Windows
+        path: dist/DNS管理器.exe
+        
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/DNS管理器.exe
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pyqt5 python3-pyqt5.qtquick qml-module-qtquick-controls2
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Build executable
+      run: |
+        pyinstaller --onefile --windowed --name="dns-manager" --add-data="app:app" --hidden-import=PyQt5.sip --hidden-import=qfluentwidgets main.py
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: DNS管理器-Linux
+        path: dist/dns-manager
+        
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/dns-manager
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

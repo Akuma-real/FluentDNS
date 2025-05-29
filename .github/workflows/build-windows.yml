@@ -1,0 +1,92 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Test application
+      run: |
+        python -c "import PyQt5; import qfluentwidgets; print('Dependencies OK')"
+        
+    - name: Build executable with PyInstaller
+      run: |
+        pyinstaller --clean --onefile --windowed `
+          --name="FluentDNS" `
+          --icon="icon.ico" `
+          --add-data="app;app" `
+          --hidden-import=PyQt5.sip `
+          --hidden-import=qfluentwidgets `
+          --hidden-import=requests `
+          --hidden-import=yaml `
+          --hidden-import=cryptography `
+          --exclude-module=tkinter `
+          --exclude-module=matplotlib `
+          main.py
+          
+    - name: Verify build
+      run: |
+        if (Test-Path "dist\FluentDNS.exe") {
+          Write-Host "Build successful: FluentDNS.exe created"
+          Get-Item "dist\FluentDNS.exe" | Select-Object Name, Length, LastWriteTime
+        } else {
+          Write-Error "Build failed: FluentDNS.exe not found"
+          exit 1
+        }
+        
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: FluentDNS-Windows-${{ github.sha }}
+        path: dist/FluentDNS.exe
+        retention-days: 30
+        
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/FluentDNS.exe
+        name: FluentDNS ${{ github.ref_name }}
+        body: |
+          ## FluentDNS ${{ github.ref_name }}
+          
+          ### 下载说明
+          - 下载 `FluentDNS.exe` 文件
+          - 双击运行即可使用
+          - 首次运行可能需要几秒钟启动时间
+          
+          ### 系统要求
+          - Windows 10/11
+          - 无需安装Python环境
+          
+          ### 功能特性
+          - 支持阿里云、腾讯云、CloudFlare DNS管理
+          - 现代化Fluent Design界面
+          - 完整的DNS记录管理功能
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
