@@ -258,8 +258,8 @@ class DomainInterface(QWidget):
     def create_table(self):
         """创建域名表格"""
         self.table = TableWidget(self)
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(['域名', 'DNS提供商', '记录数量', '创建时间', '操作'])
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(['域名', '记录数量', '创建时间', '操作'])
         
         # 设置列宽
         header = self.table.horizontalHeader()
@@ -267,10 +267,6 @@ class DomainInterface(QWidget):
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        
-        # 设置DNS提供商列的最小宽度，确保完整显示
-        self.table.setColumnWidth(1, 150)
         
         return self.table
     
@@ -300,18 +296,14 @@ class DomainInterface(QWidget):
             # 域名
             self.table.setItem(row, 0, QTableWidgetItem(domain['domain']))
             
-            # DNS提供商
-            provider_text = f"{domain['provider_name']}"
-            self.table.setItem(row, 1, QTableWidgetItem(provider_text))
-            
             # 记录数量 - 初始显示为加载中
-            self.table.setItem(row, 2, QTableWidgetItem('加载中...'))
+            self.table.setItem(row, 1, QTableWidgetItem('加载中...'))
             
             # 创建时间
-            self.table.setItem(row, 3, QTableWidgetItem(domain['created_at']))
+            self.table.setItem(row, 2, QTableWidgetItem(domain['created_at']))
             
             # 操作按钮
-            self.table.setCellWidget(row, 4, self.create_action_buttons(domain))
+            self.table.setCellWidget(row, 3, self.create_action_buttons(domain))
             
             # 异步获取记录数量
             self.load_record_count(row, domain)
@@ -340,7 +332,7 @@ class DomainInterface(QWidget):
             # 获取DNS提供商配置
             provider_data = get_provider_config(domain['provider_id'])
             if not provider_data:
-                self.table.setItem(row, 2, QTableWidgetItem('配置错误'))
+                self.table.setItem(row, 1, QTableWidgetItem('配置错误'))
                 return
             
             # 创建并启动记录数量工作线程
@@ -350,7 +342,7 @@ class DomainInterface(QWidget):
             worker.start()
             
         except Exception as e:
-            self.table.setItem(row, 2, QTableWidgetItem('加载失败'))
+            self.table.setItem(row, 1, QTableWidgetItem('加载失败'))
     
     def on_record_count_finished(self, row, count, error_message):
         """记录数量加载完成回调"""
@@ -358,11 +350,11 @@ class DomainInterface(QWidget):
             del self.record_count_workers[row]
         
         if error_message:
-            self.table.setItem(row, 2, QTableWidgetItem('加载失败'))
+            self.table.setItem(row, 1, QTableWidgetItem('加载失败'))
         elif count >= 0:
-            self.table.setItem(row, 2, QTableWidgetItem(str(count)))
+            self.table.setItem(row, 1, QTableWidgetItem(str(count)))
         else:
-            self.table.setItem(row, 2, QTableWidgetItem('未知'))
+            self.table.setItem(row, 1, QTableWidgetItem('未知'))
     
     def add_domain(self):
         """添加域名"""
