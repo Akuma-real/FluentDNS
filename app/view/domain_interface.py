@@ -301,7 +301,7 @@ class DomainInterface(QWidget):
             self.table.setItem(row, 0, QTableWidgetItem(domain['domain']))
             
             # DNS提供商
-            provider_text = f"{domain['provider_name']} ({domain['provider_type']})"
+            provider_text = f"{domain['provider_name']}"
             self.table.setItem(row, 1, QTableWidgetItem(provider_text))
             
             # 记录数量 - 初始显示为加载中

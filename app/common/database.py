@@ -170,12 +170,11 @@ class DatabaseManager:
 
     
     def delete_domain(self, domain_id: int):
-        """删除域名（软删除）"""
+        """删除域名（物理删除）"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                UPDATE domains 
-                SET enabled = 0, updated_at = CURRENT_TIMESTAMP
+                DELETE FROM domains 
                 WHERE id = ?
             """, (domain_id,))
             conn.commit()
